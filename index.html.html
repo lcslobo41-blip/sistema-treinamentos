@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sistema de Controle de Treinamentos — Chromax / ILS</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a18;min-height:100vh;font-size:13px}
+.topbar{background:#fff;border-bottom:1px solid #e5e5e2;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo{width:90px;height:34px;background:#1F5FA6;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.logo span{color:#fff;font-size:11px;font-weight:700;letter-spacing:1px}
+#logo-img{height:34px;display:none;cursor:pointer;border-radius:4px}
+.tabs{display:flex;gap:1px;border-bottom:1px solid #e5e5e2;background:#fff;padding:0 16px;flex-wrap:wrap}
+.tab{padding:8px 14px;font-size:12px;cursor:pointer;border:none;background:none;color:#666;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab.on{color:#1F5FA6;border-bottom-color:#1F5FA6;font-weight:500}
+.tab:hover:not(.on){color:#1a1a18;background:#f5f5f3}
+.sec{display:none;padding:16px}.sec.on{display:block}
+.card{background:#fff;border:1px solid #e5e5e2;border-radius:10px;padding:14px;margin-bottom:12px}
+.ct{font-size:13px;font-weight:500;margin-bottom:10px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fg{display:flex;flex-direction:column;gap:3px}
+label{font-size:11px;color:#555;font-weight:500}
+input,select{width:100%;padding:7px 9px;font-size:12px;border:1px solid #ddd;border-radius:7px;background:#fff;color:#1a1a18;outline:none}
+input:focus,select:focus{border-color:#1F5FA6}
+.btn{background:#1F5FA6;color:#fff;border:none;padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-weight:500}
+.btn:hover{background:#0c447c}
+.btn-g{background:#1D7A3A;color:#fff;border:none;padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer}
+.btn-s{background:none;color:#1F5FA6;border:1px solid #b5d4f4;padding:5px 12px;border-radius:7px;font-size:11px;cursor:pointer}
+.btn-d{background:none;border:1px solid #e24b4a;color:#a32d2d;padding:3px 7px;border-radius:5px;font-size:11px;cursor:pointer}
+.b{display:inline-block;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:500;white-space:nowrap}
+.bsms{background:#e8f5ec;color:#1D7A3A}.bqual{background:#e6f1fb;color:#1F5FA6}
+.bok{background:#e8f5ec;color:#1D7A3A}.bpend{background:#faeeda;color:#854f0b}
+.bprog{background:#e6f1fb;color:#1F5FA6}.bgray{background:#f1efe8;color:#5f5e5a}
+.bchx{background:#e6f1fb;color:#1F5FA6}.bils{background:#e8f5ec;color:#1D7A3A}
+.breal{background:#e8f5ec;color:#1D7A3A}.bcur{background:#e6f1fb;color:#1F5FA6}
+.sg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
+.sc{background:#fff;border:1px solid #e5e5e2;border-radius:8px;padding:12px}
+.sn{font-size:20px;font-weight:500}.sl{font-size:10px;color:#888;margin-top:1px}
+.sr{display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap}
+.sr input{flex:1;min-width:150px}
+.cc{background:#fff;border:1px solid #e5e5e2;border-radius:8px;padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:border-color .1s}
+.cc:hover{border-color:#b5d4f4}
+.cn{font-size:13px;font-weight:500}.cs{font-size:11px;color:#888;margin-top:1px}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{text-align:left;padding:7px 9px;font-weight:500;color:#888;border-bottom:1px solid #e5e5e2;background:#f9f9f7;white-space:nowrap}
+.tbl td{padding:7px 9px;border-bottom:1px solid #f0f0ee;vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafaf8}
+.empty{text-align:center;color:#aaa;padding:1.5rem;font-size:12px}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:100}
+.md{background:#fff;border-radius:12px;padding:18px;width:94%;max-width:620px;max-height:85vh;overflow-y:auto}
+.mt{font-size:13px;font-weight:500;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e5e5e2}
+.ma{display:flex;justify-content:flex-end;gap:7px;margin-top:12px;padding-top:8px;border-top:1px solid #e5e5e2}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.chip{display:inline-flex;align-items:center;gap:3px;background:#fff;border:1px solid #ddd;border-radius:99px;padding:3px 10px;font-size:11px;cursor:pointer;color:#666}
+.chip:hover{border-color:#1F5FA6;color:#1F5FA6}
+.chip.on{background:#e6f1fb;border-color:#b5d4f4;color:#1F5FA6;font-weight:500}
+.tr{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f0f0ee;font-size:11px;gap:7px}
+.tr:last-child{border-bottom:none}
+.tn{flex:1;color:#1a1a18;line-height:1.4}
+.ch{font-size:11px;font-weight:500;color:#555;background:#f5f5f3;padding:5px 8px;border-radius:5px;margin:8px 0 5px}
+.sm-msg{background:#e8f5ec;color:#1D7A3A;border:1px solid #c0dd97;border-radius:7px;padding:7px 10px;font-size:11px;margin-bottom:8px}
+.em-msg{background:#fcebeb;color:#a32d2d;border:1px solid #f7c1c1;border-radius:7px;padding:7px 10px;font-size:11px;margin-bottom:8px}
+.pc{background:#fff;border:1px solid #e5e5e2;border-radius:8px;padding:10px 12px;margin-bottom:7px;cursor:pointer}
+.pc:hover{border-color:#b5d4f4}
+.mg{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:12px}
+.mc{background:#fff;border:1px solid #e5e5e2;border-radius:7px;padding:8px;cursor:pointer;text-align:center}
+.mc:hover,.mc.on{border-color:#1F5FA6;background:#e6f1fb}
+.mc .mn{font-size:10px;font-weight:500;color:#555}.mc .mq{font-size:16px;font-weight:500;color:#1F5FA6;margin-top:1px}
+.bg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.ldr{text-align:center;padding:2rem;color:#aaa;font-size:12px}
+.sync-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#1D7A3A;background:#e8f5ec;padding:3px 8px;border-radius:99px}
+@media(max-width:700px){.sg{grid-template-columns:repeat(2,1fr)}.fr{grid-template-columns:1fr}.bg2{grid-template-columns:1fr}.mg{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="logo" id="logo-ph" onclick="document.getElementById('li').click()" title="Carregar logo"><span>CHROMAX</span></div>
+    <img id="logo-img" src="" style="height:34px;display:none;cursor:pointer;border-radius:4px" onclick="document.getElementById('li').click()"/>
+    <input type="file" id="li" accept="image/*" style="display:none" onchange="loadLogo(event)"/>
+    <div>
+      <div style="font-size:14px;font-weight:500">Sistema de Controle de Treinamentos</div>
+      <div style="font-size:11px;color:#888">Chromax Superfícies &amp; ILS · FML-7.2C7-B / FML-7.2C2 · 2026</div>
+    </div>
+  </div>
+  <div id="sync-lbl"><span class="sync-badge">Local</span></div>
+</div>
+<div class="tabs">
+  <button class="tab on" onclick="sT('dash',this)">Dashboard</button>
+  <button class="tab" onclick="sT('colabs',this)">Colaboradores</button>
+  <button class="tab" onclick="sT('treins',this)">Treinamentos</button>
+  <button class="tab" onclick="sT('funcs',this)">Funções</button>
+  <button class="tab" onclick="sT('plano',this)">Plano 2026</button>
+  <button class="tab" onclick="sT('cad',this)">Cadastrar</button>
+  <button class="tab" onclick="sT('rels',this)">Relatórios</button>
+  <button class="tab" onclick="sT('bkp',this)">Backup</button>
+</div>
+
+<div class="sec on" id="s-dash">
+  <div class="sg" id="d-sg"><div class="ldr">Carregando...</div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="card"><div class="ct">Por empresa</div><div id="d-emp"></div></div>
+    <div class="card"><div class="ct">Plano 2026 — status</div><div id="d-pln"></div></div>
+  </div>
+  <div class="card" style="margin-top:12px"><div class="ct">Colaboradores com pendências</div><div id="d-pend"></div></div>
+</div>
+
+<div class="sec" id="s-colabs">
+  <div class="sr">
+    <input id="bc" placeholder="Buscar por nome ou função..." oninput="rColabs()"/>
+    <select id="fc" onchange="rColabs()" style="width:auto;min-width:120px">
+      <option value="">Todas empresas</option><option value="CHX">Chromax</option><option value="ILS">ILS</option>
+    </select>
+    <button class="btn-s" onclick="expColabsXL()">Excel</button>
+  </div>
+  <div id="l-colabs"></div>
+</div>
+
+<div class="sec" id="s-treins">
+  <div class="chips" id="ch-t">
+    <span class="chip on" onclick="sChip('todos',this,'ch-t');rTreins()">Todos</span>
+    <span class="chip" onclick="sChip('SMS',this,'ch-t');rTreins()">SMS</span>
+    <span class="chip" onclick="sChip('QUAL',this,'ch-t');rTreins()">Qualidade</span>
+    <span class="chip" onclick="sChip('CHX',this,'ch-t');rTreins()">Só CHX</span>
+    <span class="chip" onclick="sChip('ILS',this,'ch-t');rTreins()">Só ILS</span>
+    <span class="chip" onclick="sChip('AMBAS',this,'ch-t');rTreins()">Ambas</span>
+  </div>
+  <input id="bt" placeholder="Buscar treinamento..." oninput="rTreins()" style="margin-bottom:10px"/>
+  <div id="l-treins"></div>
+</div>
+
+<div class="sec" id="s-funcs">
+  <div class="sr">
+    <input id="bf" placeholder="Buscar função..." oninput="rFuncs()"/>
+    <select id="ff" onchange="rFuncs()" style="width:auto;min-width:120px">
+      <option value="">Todas</option><option value="CHX">Chromax</option><option value="ILS">ILS</option>
+    </select>
+  </div>
+  <div id="l-funcs"></div>
+</div>
+
+<div class="sec" id="s-plano">
+  <div class="card" style="margin-bottom:12px">
+    <div class="ct">FML-7.2C2 — Plano de Treinamento 2026</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="p-sg"></div>
+  </div>
+  <div class="mg" id="p-mg"></div>
+  <div class="sr">
+    <input id="bp" placeholder="Buscar curso..." oninput="rPlano()"/>
+    <select id="fp" onchange="rPlano()" style="width:auto;min-width:120px">
+      <option value="">Ambas</option><option value="CHX">Chromax</option><option value="ILS">ILS</option>
+    </select>
+    <div class="chips" id="ch-p" style="margin-bottom:0">
+      <span class="chip on" onclick="sChip('todos',this,'ch-p');rPlano()">Todos</span>
+      <span class="chip" onclick="sChip('realizado',this,'ch-p');rPlano()">Realizados</span>
+      <span class="chip" onclick="sChip('em_curso',this,'ch-p');rPlano()">Em curso</span>
+      <span class="chip" onclick="sChip('pendente',this,'ch-p');rPlano()">Pendentes</span>
+    </div>
+    <button class="btn-s" onclick="expPlanoXL()">Excel</button>
+  </div>
+  <div id="l-plano"></div>
+</div>
+
+<div class="sec" id="s-cad">
+  <div style="display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap" id="cad-tabs">
+    <button class="chip on" onclick="sCadTab('colab',this)">Colaborador</button>
+    <button class="chip" onclick="sCadTab('cad-trein',this)">Cadastrar Treinamento</button>
+    <button class="chip" onclick="sCadTab('cad-func',this)">Cadastrar Função</button>
+    <button class="chip" onclick="sCadTab('matriz',this)">Obrigatórios</button>
+    <button class="chip" onclick="sCadTab('trein-status',this)">Status Treinamentos</button>
+    <button class="chip" onclick="sCadTab('func-status',this)">Status Funções</button>
+    <button class="chip" onclick="sCadTab('mudanca',this)">Mudança de Função</button>
+    <button class="chip" onclick="sCadTab('deslig',this)">Desligamento</button>
+  </div>
+  <div id="cad-colab">
+  <div class="card">
+    <div class="ct">Cadastrar colaborador</div>
+    <div id="msg-c"></div>
+    <div class="fr">
+      <div class="fg"><label>Nome *</label><input id="c-n" placeholder="Nome completo"/></div>
+      <div class="fg"><label>Empresa *</label>
+        <select id="c-e" onchange="atuFuncs()">
+          <option value="">— Selecione —</option><option value="CHX">Chromax</option><option value="ILS">ILS</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Função *</label><select id="c-f"><option value="">— Selecione empresa primeiro —</option></select></div>
+      <div class="fg"><label>Admissão</label><input type="date" id="c-a"/></div>
+    </div>
+    <button class="btn" onclick="cadastrar()">Cadastrar</button>
+  </div>
+  <div class="card">
+    <div class="ct">Registrar participação</div>
+    <div id="msg-r"></div>
+    <div class="fr">
+      <div class="fg"><label>Colaborador *</label><select id="r-c"><option value="">— Selecione —</option></select></div>
+      <div class="fg"><label>Treinamento *</label><select id="r-t"><option value="">— Selecione —</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Data programada</label><input type="date" id="r-dp"/></div>
+      <div class="fg"><label>Data realizada</label><input type="date" id="r-dr"/></div>
+    </div>
+    <button class="btn" onclick="registrar()">Registrar</button>
+  </div>
+  <div class="card"><div class="ct">Participações recentes</div><div id="l-part"></div></div>
+  </div><!-- fim cad-colab -->
+
+  <!-- Cadastrar Treinamento -->
+  <div id="cad-cad-trein" style="display:none">
+    <div class="card">
+      <div class="ct">Cadastrar treinamento</div>
+      <div id="msg-ct"></div>
+      <div class="fr">
+        <div class="fg"><label>Nome *</label><input id="ct-n" placeholder="Nome do treinamento"/></div>
+        <div class="fg"><label>Categoria *</label>
+          <div style="display:flex;gap:6px">
+            <select id="ct-cat" style="flex:1">
+              <option value="">— Selecione —</option>
+              <option value="SMS">SMS — Segurança / Saúde / Meio Ambiente</option>
+              <option value="QUAL">QUAL — Qualidade</option>
+            </select>
+            <button class="btn-s" onclick="toggleNovaCat()" type="button" title="Nova categoria">+</button>
+          </div>
+          <div id="nova-cat-wrap" style="display:none;margin-top:6px;display:none">
+            <div style="display:flex;gap:6px">
+              <input id="nova-cat-inp" placeholder="Nome da nova categoria" style="flex:1"/>
+              <button class="btn-s" onclick="adicionarCat()" type="button">Adicionar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Empresa *</label>
+          <select id="ct-emp">
+            <option value="">— Selecione —</option>
+            <option value="CHX">Chromax</option>
+            <option value="ILS">ILS</option>
+            <option value="AMBAS">Ambas (CHX e ILS)</option>
+          </select>
+        </div>
+        <div class="fg"><label>Descrição</label><input id="ct-desc" placeholder="Breve descrição do treinamento"/></div>
+      </div>
+      <button class="btn" onclick="cadTrein()">Cadastrar</button>
+    </div>
+    <div class="card"><div class="ct">Treinamentos cadastrados manualmente</div><div id="l-treins-extra"></div></div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="ct" style="margin-bottom:0">Eventos programados</div>
+      <button class="btn-s" onclick="abrirProgAll()">+ Novo evento</button>
+    </div>
+    <div class="chips" id="ch-ev" style="margin-bottom:8px">
+      <span class="chip on" onclick="sChip('todos',this,'ch-ev');rEventos()">Todos</span>
+      <span class="chip" onclick="sChip('programado',this,'ch-ev');rEventos()">Programados</span>
+      <span class="chip" onclick="sChip('realizado',this,'ch-ev');rEventos()">Realizados</span>
+    </div>
+    <div id="l-eventos"></div>
+  </div>
+  </div>
+
+  <!-- Cadastrar Função -->
+  <div id="cad-cad-func" style="display:none">
+    <div class="card">
+      <div class="ct">Cadastrar função</div>
+      <div id="msg-cf"></div>
+      <div class="fr">
+        <div class="fg"><label>Nome da função *</label><input id="cf-n" placeholder="Nome completo da função"/></div>
+        <div class="fg"><label>Empresa *</label>
+          <select id="cf-emp">
+            <option value="">— Selecione —</option>
+            <option value="CHX">Chromax</option>
+            <option value="ILS">ILS</option>
+            <option value="AMBAS">Ambas</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" onclick="cadFunc()">Cadastrar</button>
+    </div>
+    <div class="card"><div class="ct">Funções cadastradas manualmente</div><div id="l-funcs-extra"></div></div>
+  </div>
+
+  <!-- Matriz Obrigatórios -->
+  <div id="cad-matriz" style="display:none">
+    <div class="card">
+      <div class="ct">Vincular treinamento à função</div>
+      <div id="msg-mat"></div>
+      <div class="fr">
+        <div class="fg"><label>Função *</label>
+          <select id="mat-func" style="width:100%"><option value="">— Selecione —</option></select>
+        </div>
+        <div class="fg"><label>Empresa *</label>
+          <select id="mat-emp">
+            <option value="">— Selecione —</option>
+            <option value="CHX">Chromax</option>
+            <option value="ILS">ILS</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:10px"><label>Treinamento *</label>
+        <select id="mat-trein" style="width:100%"><option value="">— Selecione —</option></select>
+      </div>
+      <div class="fg" style="margin-bottom:12px">
+        <label>Este treinamento é obrigatório para esta função/empresa?</label>
+        <div style="display:flex;gap:16px;margin-top:6px">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
+            <input type="radio" name="mat-obrig" value="sim" style="width:auto"/> Sim — obrigatório
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px">
+            <input type="radio" name="mat-obrig" value="nao" style="width:auto"/> Não — recomendado
+          </label>
+        </div>
+      </div>
+      <button class="btn" onclick="salvarMatriz()">Vincular</button>
+    </div>
+    <div class="card">
+      <div class="ct">Consultar vínculos por função</div>
+      <div class="fr">
+        <div class="fg"><label>Função</label>
+          <select id="mat-cons-func" style="width:100%"><option value="">— Selecione —</option></select>
+        </div>
+        <div class="fg"><label>Empresa</label>
+          <select id="mat-cons-emp">
+            <option value="">Ambas</option>
+            <option value="CHX">Chromax</option>
+            <option value="ILS">ILS</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-s" onclick="consMatriz()">Consultar</button>
+      <div id="l-matriz" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <!-- Status Treinamentos -->
+  <div id="cad-trein-status" style="display:none">
+    <div class="card">
+      <div class="ct">Gerenciar status de treinamentos</div>
+      <div style="font-size:11px;color:#888;margin-bottom:10px">Treinamentos inativos não aparecem nas listas de obrigatórios nem na programação. Participações históricas são preservadas.</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        <input id="ts-busca" placeholder="Buscar treinamento..." oninput="rTreinStatus()" style="flex:1;min-width:160px"/>
+        <select id="ts-filtro" onchange="rTreinStatus()" style="width:auto">
+          <option value="todos">Todos</option>
+          <option value="ativos">Ativos</option>
+          <option value="inativos">Inativos</option>
+        </select>
+      </div>
+      <div id="l-trein-status"></div>
+    </div>
+  </div>
+
+  <!-- Status Funções -->
+  <div id="cad-func-status" style="display:none">
+    <div class="card">
+      <div class="ct">Gerenciar status de funções</div>
+      <div style="font-size:11px;color:#888;margin-bottom:10px">Funções inativas não aparecem no cadastro de colaboradores. Colaboradores existentes não são afetados.</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        <input id="fs-busca" placeholder="Buscar função..." oninput="rFuncStatus()" style="flex:1;min-width:160px"/>
+        <select id="fs-filtro" onchange="rFuncStatus()" style="width:auto">
+          <option value="todos">Todas</option>
+          <option value="ativas">Ativas</option>
+          <option value="inativas">Inativas</option>
+        </select>
+      </div>
+      <div id="l-func-status"></div>
+    </div>
+  </div>
+
+  <!-- Mudança de Função -->
+  <div id="cad-mudanca" style="display:none">
+    <div class="card">
+      <div class="ct">Registrar mudança de função</div>
+      <div id="msg-mud"></div>
+      <div class="fr">
+        <div class="fg"><label>Colaborador *</label>
+          <select id="mud-colab" onchange="onMudColabChange()" style="width:100%"><option value="">— Selecione —</option></select>
+        </div>
+        <div class="fg"><label>Data da mudança *</label>
+          <input type="date" id="mud-data"/>
+        </div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Função atual</label>
+          <input id="mud-de" readonly style="background:#f5f5f3;color:#888"/>
+        </div>
+        <div class="fg"><label>Nova função *</label>
+          <select id="mud-para" style="width:100%"><option value="">— Selecione —</option></select>
+        </div>
+      </div>
+      <div id="mud-preview" style="display:none;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-s" onclick="previewMudanca()">Ver impacto</button>
+        <button class="btn" onclick="salvarMudanca()">Confirmar mudança</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Histórico de mudanças</div>
+      <div id="l-mudancas"></div>
+    </div>
+  </div>
+
+  <!-- Desligamento -->
+  <div id="cad-deslig" style="display:none">
+    <div class="card">
+      <div class="ct">Registrar desligamento</div>
+      <div id="msg-desl"></div>
+      <div class="fr">
+        <div class="fg"><label>Colaborador *</label>
+          <select id="desl-colab" style="width:100%"><option value="">— Selecione —</option></select>
+        </div>
+        <div class="fg"><label>Data de desligamento *</label>
+          <input type="date" id="desl-data"/>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:12px"><label>Motivo</label>
+        <input id="desl-motivo" placeholder="Ex: Pedido de demissão, Demissão sem justa causa..."/>
+      </div>
+      <button class="btn" style="background:#854f0b" onclick="salvarDeslig()">Registrar desligamento</button>
+    </div>
+    <div class="card">
+      <div class="ct">Colaboradores desligados</div>
+      <div id="l-desligados"></div>
+    </div>
+  </div>
+</div>
+
+<div class="sec" id="s-rels">
+  <div class="sg" id="r-sg"></div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+    <span style="font-size:11px;font-weight:500;color:#555">Empresa:</span>
+    <div class="chips" id="ch-re" style="margin-bottom:0">
+      <span class="chip on" onclick="sChip('todas',this,'ch-re');rRelPrev()">Todas</span>
+      <span class="chip" onclick="sChip('CHX',this,'ch-re');rRelPrev()">CHX</span>
+      <span class="chip" onclick="sChip('ILS',this,'ch-re');rRelPrev()">ILS</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
+    <select id="rel-colab" onchange="rRelPrev()" style="flex:1;min-width:180px">
+      <option value="">Todos os colaboradores</option>
+    </select>
+    <select id="rel-trein" onchange="rRelPrev()" style="flex:1;min-width:180px">
+      <option value="">Todos os treinamentos</option>
+    </select>
+    <select id="rel-cat" onchange="rRelPrev()" style="width:auto;min-width:140px">
+      <option value="">Todas as categorias</option>
+      <option value="SMS">SMS</option>
+      <option value="QUAL">QUAL</option>
+    </select>
+    <button class="btn-s" onclick="limparFiltrosRel()">Limpar</button>
+  </div>
+  <div class="chips" id="ch-rl">
+    <span class="chip on" onclick="sRel('cob',this)">Cobertura</span>
+    <span class="chip" onclick="sRel('todos_trein',this)">Todos treinamentos</span>
+    <span class="chip" onclick="sRel('col',this)">Por colaborador</span>
+    <span class="chip" onclick="sRel('trn',this)">Por treinamento</span>
+    <span class="chip" onclick="sRel('fnc',this)">Por função</span>
+    <span class="chip" onclick="sRel('pnd',this)">Pendências</span>
+    <span class="chip" onclick="sRel('agd',this)">Agenda</span>
+    <span class="chip" onclick="sRel('his',this)">Histórico</span>
+    <span class="chip" onclick="sRel('pln',this)">Plano 2026</span>
+  </div>
+  <div class="card" style="padding:0">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #e5e5e2">
+      <div>
+        <div style="font-size:13px;font-weight:500" id="r-tit">Cobertura geral</div>
+        <div style="font-size:11px;color:#888;margin-top:1px" id="r-desc"></div>
+      </div>
+      <button class="btn" onclick="expRelXL()">Excel</button>
+    </div>
+    <div style="overflow-x:auto;max-height:460px;overflow-y:auto" id="r-prev"></div>
+  </div>
+</div>
+
+<div class="sec" id="s-bkp">
+  <div style="background:#faeeda;border:1px solid #f0c674;border-radius:10px;padding:14px;margin-bottom:12px">
+    <div style="font-size:13px;font-weight:500;color:#854f0b;margin-bottom:6px">Armazenamento local (este computador)</div>
+    <div style="font-size:12px;color:#333">Dados salvos neste navegador. Use Exportar/Importar JSON para compartilhar com outros usuários.</div>
+  </div>
+  <div class="bg2">
+    <div class="card">
+      <div class="ct">Exportar backup</div>
+      <div id="bkp-info" style="background:#f5f5f3;border-radius:7px;padding:8px;font-size:11px;color:#555;margin-bottom:10px"></div>
+      <button class="btn" onclick="expBkp()" style="width:100%">Baixar .json</button>
+    </div>
+    <div class="card">
+      <div class="ct">Importar backup</div>
+      <div style="margin-bottom:10px">
+        <label style="display:flex;align-items:flex-start;gap:7px;cursor:pointer;margin-bottom:6px">
+          <input type="radio" name="modo" value="mesclar" checked style="margin-top:2px;width:auto"/>
+          <div><div style="font-size:12px;font-weight:500">Mesclar</div><div style="font-size:11px;color:#888">Mantém dados atuais, adiciona novos</div></div>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:7px;cursor:pointer">
+          <input type="radio" name="modo" value="substituir" style="margin-top:2px;width:auto"/>
+          <div><div style="font-size:12px;font-weight:500">Substituir</div><div style="font-size:11px;color:#888">Apaga tudo e carrega o backup</div></div>
+        </label>
+      </div>
+      <div id="bkp-msg"></div>
+      <input type="file" id="bkp-in" accept=".json" style="display:none" onchange="impBkp(event)"/>
+      <button class="btn-g" onclick="document.getElementById('bkp-in').click()" style="width:100%">Selecionar .json</button>
+    </div>
+  </div>
+  <div class="card"><div class="ct">Status</div><div id="bkp-st"></div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e5e2">
+      <div style="font-size:11px;font-weight:500;color:#a32d2d;margin-bottom:5px">Zona de perigo</div>
+      <div style="font-size:11px;color:#666;margin-bottom:8px">Apaga colaboradores adicionados manualmente e todas as participações.</div>
+      <button onclick="resetD()" style="background:none;border:1px solid #e24b4a;color:#a32d2d;padding:5px 12px;border-radius:7px;font-size:11px;cursor:pointer">Apagar dados</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="mo-c" style="display:none" onclick="if(event.target===this)cM('mo-c')">
+  <div class="md"><div class="mt" id="mc-t"></div><div id="mc-b"></div><div class="ma"><button class="btn-s" onclick="cM('mo-c')">Fechar</button></div></div>
+</div>
+<div class="mo" id="mo-f" style="display:none" onclick="if(event.target===this)cM('mo-f')">
+  <div class="md"><div class="mt" id="mf-t"></div><div id="mf-b"></div><div class="ma"><button class="btn-s" onclick="cM('mo-f')">Fechar</button></div></div>
+</div>
+<div class="mo" id="mo-p" style="display:none" onclick="if(event.target===this)cM('mo-p')">
+  <div class="md" style="max-width:480px"><div class="mt" id="mp-t"></div><div id="mp-b"></div><div class="ma"><button class="btn-s" onclick="cM('mo-p')">Fechar</button></div></div>
+</div>
+
+<script>
+const DB_T=[{"id":"T001","nome":"Ca Mama (Campanha de Saúde - Outubro Rosa)","empresas":["CHX"],"categoria":"SMS"},{"id":"T002","nome":"Ca Próstata (Campanha de Saúde - Novembro Azul)","empresas":["CHX"],"categoria":"SMS"},{"id":"T003","nome":"Covid-19 (Causa e Cuidados)","empresas":["CHX"],"categoria":"QUAL"},{"id":"T004","nome":"Dengue/Zika (Campanha de Saúde)","empresas":["CHX"],"categoria":"SMS"},{"id":"T005","nome":"Direção Defensiva","empresas":["CHX"],"categoria":"QUAL"},{"id":"T006","nome":"Integração de novos SSMA","empresas":["CHX"],"categoria":"SMS"},{"id":"T007","nome":"NR01 Direito de Recusa ao Trabalho","empresas":["CHX"],"categoria":"SMS"},{"id":"T008","nome":"NR06 Uso correto e conservação do EPI","empresas":["CHX","ILS"],"categoria":"SMS"},{"id":"T009","nome":"NR07 Divulgação PCMSO","empresas":["CHX"],"categoria":"SMS"},{"id":"T010","nome":"NR09 Divulgação PPRA / PGR","empresas":["CHX"],"categoria":"SMS"},{"id":"T011","nome":"NR10 Treinamento de Eletricista","empresas":["CHX"],"categoria":"SMS"},{"id":"T012","nome":"NR11 Treinamento de Ponte Rolante","empresas":["CHX"],"categoria":"SMS"},{"id":"T013","nome":"NR17 Risco Ergonômico","empresas":["CHX"],"categoria":"SMS"},{"id":"T014","nome":"NR23 Combate a princípio de incêndio","empresas":["CHX","ILS"],"categoria":"SMS"},{"id":"T015","nome":"NR25 Destinação Adequada de Resíduos","empresas":["CHX"],"categoria":"SMS"},{"id":"T016","nome":"NR33 Trabalho em Espaço Confinado","empresas":["CHX"],"categoria":"SMS"},{"id":"T017","nome":"NR34 Trabalho a Quente","empresas":["CHX"],"categoria":"SMS"},{"id":"T018","nome":"NR35 Trabalho em Altura","empresas":["CHX"],"categoria":"SMS"},{"id":"T019","nome":"Primeiros Socorros","empresas":["CHX"],"categoria":"SMS"},{"id":"T020","nome":"Produto Químico - Acidentes e Risco","empresas":["CHX"],"categoria":"SMS"},{"id":"T021","nome":"Produto Químico - FISPQ","empresas":["CHX"],"categoria":"SMS"},{"id":"T022","nome":"Produto Químico - Manuseio","empresas":["CHX"],"categoria":"SMS"},{"id":"T023","nome":"Proteção Auditiva","empresas":["CHX","ILS"],"categoria":"SMS"},{"id":"T024","nome":"Proteção Respiratória","empresas":["CHX","ILS"],"categoria":"SMS"},{"id":"T025","nome":"Integração de novos no SGQ","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T026","nome":"Integração de novos no RH","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T027","nome":"PQ - Política da Qualidade","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T028","nome":"MAN-SGI-003 - Regulamento Interno","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T029","nome":"PRO-SGQ-5.1.1 - Contas a Pagar","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T030","nome":"PRO-SGQ-5.1.1A - Contas a Receber","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T031","nome":"PRO-SGQ-5.1.1B - Fluxo de Caixa","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T032","nome":"PRO-SGQ-6.1 - Análise de Riscos","empresas":["CHX"],"categoria":"QUAL"},{"id":"T033","nome":"PRO-SGQ-6.3 - Planejamento de Mudanças","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T034","nome":"PRO-SGQ-7.1.2 - Contratação de RH","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T035","nome":"PRO-SGQ-7.1.3 - Controle de Infraestrutura","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T036","nome":"PRO-SGQ-7.1.5 - Monitoramento e Medição","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T037","nome":"PRO-SGQ-7.2 - Qualificação de RH","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T038","nome":"PRO-SGQ-7.2C - Avaliação de Desempenho","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T039","nome":"PRO-SGQ-7.5 - Informação Documentada","empresas":["CHX"],"categoria":"QUAL"},{"id":"T040","nome":"PRO-SGQ-8.2 - Tratamento de Produtos","empresas":["CHX"],"categoria":"QUAL"},{"id":"T041","nome":"PRO-SGQ-8.4 - Aquisição","empresas":["CHX"],"categoria":"QUAL"},{"id":"T042","nome":"PRO-SGQ-8.4.1 - Avaliação de Provedores","empresas":["CHX"],"categoria":"QUAL"},{"id":"T043","nome":"PRO-SGQ-8.5.1 - Planej. e Controle da Produção","empresas":["CHX"],"categoria":"QUAL"},{"id":"T044","nome":"PRO-SGQ-8.5.1A - Preenchimento de OS","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T045","nome":"PRO-SGQ-8.5.4 - Arm. e Expedição","empresas":["CHX"],"categoria":"QUAL"},{"id":"T046","nome":"PRO-SGQ-9.1.2 - Satisfação de Clientes","empresas":["CHX"],"categoria":"QUAL"},{"id":"T047","nome":"PRO-SGQ-9.1.3 - Indicadores de Gestão","empresas":["CHX"],"categoria":"QUAL"},{"id":"T048","nome":"PRO-SGQ-9.2 - Auditoria Interna","empresas":["CHX"],"categoria":"QUAL"},{"id":"T049","nome":"PRO-SGQ-9.3 - Análise Crítica","empresas":["CHX"],"categoria":"QUAL"},{"id":"T050","nome":"PRO-SGQ-10.2 - Não Conformidades","empresas":["CHX"],"categoria":"QUAL"},{"id":"T051","nome":"PRO-SGQ-10.3 - Melhorias","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T052","nome":"PES001 - Aquisição e Inspeção","empresas":["CHX"],"categoria":"QUAL"},{"id":"T053","nome":"PES002 - Inspeção de Peças","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T054","nome":"PES003 - Metalização de Peças","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T055","nome":"PES004 - Cromagem Dura","empresas":["CHX"],"categoria":"QUAL"},{"id":"T056","nome":"PES014 - Recuperação de Camisas GM 645","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T057","nome":"PES018 - COLMONOY #5","empresas":["CHX"],"categoria":"QUAL"},{"id":"T058","nome":"PES019 - Recuperação de pinos riser","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T059","nome":"PES021 - Procedimento geral de soldagem","empresas":["CHX","ILS"],"categoria":"SMS"},{"id":"T060","nome":"PES022 - Soldagem laser inconel","empresas":["CHX"],"categoria":"SMS"},{"id":"T061","nome":"PES023 - Soldagem laser 431L","empresas":["CHX"],"categoria":"SMS"},{"id":"T062","nome":"PES025 - Tratamento fosfato","empresas":["CHX"],"categoria":"QUAL"},{"id":"T063","nome":"PES026 - Jateamento","empresas":["CHX"],"categoria":"QUAL"},{"id":"T064","nome":"PES027 - Brush Plating","empresas":["CHX"],"categoria":"QUAL"},{"id":"T065","nome":"PES028 - Pintura de Peças","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T066","nome":"PSS-003 - Teste Hidráulico","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T067","nome":"PSS-006 - Inspeção de Camisas GM 645","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T068","nome":"PSS-016 - Medição de Rugosidade","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T069","nome":"PSS-017 - Concentração de Cromo","empresas":["CHX"],"categoria":"QUAL"},{"id":"T070","nome":"PSS-021 - Tratamento de Efluentes","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T071","nome":"PSS-022 - Certificados de Medição","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T072","nome":"PSS-025 - Líquido Penetrante","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T073","nome":"PSS-026 - Limpeza máq. soldagem laser","empresas":["CHX","ILS"],"categoria":"SMS"},{"id":"T074","nome":"PSS-029 - Teste de Ferroxil","empresas":["CHX"],"categoria":"QUAL"},{"id":"T075","nome":"PSS-032 - Retífica de Peças","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T076","nome":"PSS-033 - Usinagem de Peças","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T077","nome":"PSS-034 - Acabamento de Peças","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T078","nome":"PSS-035 - Brunimento de Peças","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T079","nome":"PSS-036 - Partículas Magnéticas","empresas":["CHX"],"categoria":"QUAL"},{"id":"T080","nome":"IT04 - Cromagem hastes Dofcon","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T081","nome":"IT-05 - Colmonoy #5 x 4140","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T082","nome":"IT06 - Aplicação de Colmonoy","empresas":["CHX"],"categoria":"QUAL"},{"id":"T083","nome":"IT10 - Ligação da Chave cromados","empresas":["CHX"],"categoria":"QUAL"},{"id":"T084","nome":"PRO-SGA-4.2.2 - Aspectos e Impactos","empresas":["CHX","ILS"],"categoria":"QUAL"},{"id":"T085","nome":"PRO-SGA-8.0 - Proteção do Meio Ambiente","empresas":["CHX","ILS"],"categoria":"SMS"},{"id":"T086","nome":"PRO-SGI-4.4.7 - Plano de Emergência","empresas":["CHX","ILS"],"categoria":"SMS"},{"id":"T087","nome":"PSSM - Política SMS","empresas":["CHX","ILS"],"categoria":"SMS"},{"id":"T088","nome":"Treinamento NR10","empresas":["ILS"],"categoria":"SMS"},{"id":"T089","nome":"Treinamento Ergonomia NR-17","empresas":["ILS"],"categoria":"SMS"},{"id":"T090","nome":"Treinamento 5S","empresas":["ILS"],"categoria":"SMS"},{"id":"T091","nome":"Destinação Adequada de Resíduo NR-25","empresas":["ILS"],"categoria":"SMS"},{"id":"T092","nome":"Transporte de materiais NR-11","empresas":["ILS"],"categoria":"SMS"},{"id":"T093","nome":"PRO-SGQ-8.2 - Requisitos Prod. Serviços (ILS)","empresas":["ILS"],"categoria":"QUAL"},{"id":"T094","nome":"PRO-SGQ-8.5.1 - Planej. Produção (ILS)","empresas":["ILS"],"categoria":"QUAL"},{"id":"T095","nome":"PRO-SGQ-8.5.4 - Armazenagem (ILS)","empresas":["ILS"],"categoria":"QUAL"},{"id":"T096","nome":"PRO-SGQ-10.2 - NCs e ACs (ILS)","empresas":["ILS"],"categoria":"QUAL"},{"id":"T097","nome":"PES018 - Spray & Fuse Colmonoy","empresas":["ILS"],"categoria":"QUAL"},{"id":"T098","nome":"PES022 - Laser Cladding Hard-facing","empresas":["ILS"],"categoria":"QUAL"},{"id":"T099","nome":"PES023 - Laser Cladding 431L","empresas":["ILS"],"categoria":"QUAL"},{"id":"T100","nome":"PES025 - Fosfato (ILS)","empresas":["ILS"],"categoria":"QUAL"},{"id":"T101","nome":"PES026 - Jateamento (ILS)","empresas":["ILS"],"categoria":"QUAL"},{"id":"T102","nome":"PSS010 - Passivação inox 316","empresas":["ILS"],"categoria":"SMS"},{"id":"T103","nome":"PSS029 - Teste Ferroxil (ILS)","empresas":["ILS"],"categoria":"QUAL"},{"id":"T104","nome":"IT06 - Colmonoy #5 (ILS)","empresas":["ILS"],"categoria":"QUAL"}];
+const DB_F=["ANALISTA ADMINISTRATIVO DE RECURSOS HUMANOS","ANALISTA DE CONTROLE DE QUALIDADE JUNIOR","ANALISTA DE FATURAMENTO","ANALISTA DE FATURAMENTO SENIOR","ANALISTA FINANCEIRO","ANODEIRO","APRENDIZ ADMINISTRATIVO","APRENDIZ DE AUXILIAR DE PRODUÇÃO","APRENDIZ DE MECÂNICO DE USINAGEM","APRENDIZ DE MECANICO DE USINAGEM","ASSISTENTE ADMINISTRATIVO","ASSISTENTE ADMINISTRATIVO FINANCEIRO","ASSISTENTE DE DEPARTAMENTO PESSOAL","ASSISTENTE DE PCP","AUXILIAR DE ALMOXARIFADO","AUXILIAR DE CROMADOR","AUXILIAR DE EXPEDIÇÃO I","AUXILIAR DE LIMPEZA","AUXILIAR DE MANUTENÇÃO","AUXILIAR DE MECÂNICO","AUXILIAR DE MECÂNICO I","AUXILIAR DE METALIZADOR","AUXILIAR DE OPERAÇÃO","AUXILIAR DE OPERADOR DE BRUNIDORA","AUXILIAR OPERADOR ETDI","AUXILIAR DE PRODUÇÃO","AUXILIAR DE SERVIÇOS GERAIS (I E II)","COORDENADORA COMERCIAL","COORDENADOR DE SUPRIMENTOS","CROMADOR (I, II, III)","ELETRICISTA DE MANUTENÇÃO I","ELETRICISTA DE MANUTENÇÃO II","INSPETOR DE QUALIDADE","JATISTA","LIDER DE EXPEDIÇÃO E RECEBIMENTO","LIDER DE INSPEÇÃO DA QUALIDADE","LIDER DE TRATAMENTO E SUPERFÍCIE","MECANICO DE MANUTENÇÃ INDUSTRIAL","METALIZADOR","METALIZADOR (C)","MOTORISTA COMPRADOR","OPERADOR DE ACABAMENTO","OPERADOR DE BRUNIMENTO (C, D)","OPERADOR DE BRUNIDORA B","OPERADOR DE SUPERFÍCIE D","OPERADOR DE TRATAMENTO DE SUPERFÍCIE (I, II)","OPERADOR DE USINAGEM","PINTOR INDUSTRIAL","QUÍMICO","RETIFICADOR","RETIFICADOR A","SERRALHEIRO B","SOLDADOR","SUPERVISOR DE PLANEJAMENTO E PRODUÇÃO","SUPERVISOR DE PRODUÇÃO DE HIDRÁULICA","TÉCNICO DE SEGURANÇA DO TRABALHO SENIOR","TORNEIRO MECÂNICO","TORNEIRO MECÂNICO I","TORNEIRO MECÂNICO III","TORNEIRO RETIFICADOR"];
+const DB_M={"ANALISTA ADMINISTRATIVO DE RECURSOS HUMANOS":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T034","T037","T038","T027","T087"]},"ANALISTA DE CONTROLE DE QUALIDADE JUNIOR":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T036","T043","T044","T050","T051","T071","T087"],"ILS":[]},"ANALISTA DE FATURAMENTO":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T034","T037","T038","T027","T087"]},"ANALISTA DE FATURAMENTO SENIOR":{"CHX":["T001","T002","T003","T004","T005","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T047","T087"],"ILS":[]},"ANALISTA FINANCEIRO":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T034","T037","T038","T027","T087"]},"ANODEIRO":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T020","T021","T022","T023","T024","T025","T026","T027","T028","T051","T087"],"ILS":[]},"APRENDIZ ADMINISTRATIVO":{"CHX":["T001","T002","T003","T004","T006","T008","T014","T019","T023","T024","T025","T026","T027","T028","T087"],"ILS":[]},"APRENDIZ DE AUXILIAR DE PRODUÇÃO":{"CHX":[],"ILS":[]},"APRENDIZ DE MECÂNICO DE USINAGEM":{"CHX":[],"ILS":[]},"APRENDIZ DE MECANICO DE USINAGEM":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T087","T092"]},"ASSISTENTE ADMINISTRATIVO":{"CHX":["T001","T002","T003","T004","T005","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T029","T030","T031","T034","T037","T044","T046","T047","T051","T087"],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T034","T037","T038","T027","T087"]},"ASSISTENTE ADMINISTRATIVO FINANCEIRO":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T034","T037","T038","T027","T087"]},"ASSISTENTE DE DEPARTAMENTO PESSOAL":{"CHX":["T001","T002","T003","T004","T005","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T029","T030","T031","T034","T037","T044","T046","T047","T051","T087"],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T034","T037","T038","T027","T087"]},"ASSISTENTE DE PCP":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T033","T044","T087","T093","T094"]},"AUXILIAR DE ALMOXARIFADO":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T087"]},"AUXILIAR DE CROMADOR":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T015","T019","T020","T021","T022","T023","T024","T025","T026","T027","T028","T051","T055","T087"],"ILS":[]},"AUXILIAR DE EXPEDIÇÃO I":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T087"],"ILS":[]},"AUXILIAR DE LIMPEZA":{"CHX":["T001","T002","T003","T004","T006","T008","T014","T019","T023","T024","T025","T026","T027","T028","T087"],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T087"]},"AUXILIAR DE MANUTENÇÃO":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T087","T088","T092"]},"AUXILIAR DE MECÂNICO":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T011","T012","T013","T014","T018","T019","T023","T024","T025","T026","T027","T028","T087"],"ILS":[]},"AUXILIAR DE MECÂNICO I":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T087","T088","T092"]},"AUXILIAR DE METALIZADOR":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T020","T021","T022","T023","T024","T025","T026","T027","T028","T051","T054","T087"],"ILS":[]},"AUXILIAR DE OPERAÇÃO":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T087"],"ILS":[]},"AUXILIAR DE OPERADOR DE BRUNIDORA":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T051","T087"],"ILS":[]},"AUXILIAR OPERADOR ETDI":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T087"],"ILS":[]},"AUXILIAR DE PRODUÇÃO":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T087"],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T087"]},"AUXILIAR DE SERVIÇOS GERAIS (I E II)":{"CHX":["T001","T002","T003","T004","T006","T008","T014","T019","T023","T024","T025","T026","T027","T028","T087"],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T087"]},"COORDENADORA COMERCIAL":{"CHX":["T001","T002","T003","T004","T005","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T046","T047","T051","T087"],"ILS":[]},"COORDENADOR DE SUPRIMENTOS":{"CHX":["T001","T002","T003","T004","T005","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T041","T042","T046","T047","T051","T087"],"ILS":[]},"CROMADOR (I, II, III)":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T015","T019","T020","T021","T022","T023","T024","T025","T026","T027","T028","T051","T055","T087"],"ILS":[]},"ELETRICISTA DE MANUTENÇÃO I":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T087","T088","T092"]},"ELETRICISTA DE MANUTENÇÃO II":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T087","T088","T092"]},"INSPETOR DE QUALIDADE":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T033","T036","T044","T053","T056","T058","T066","T067","T068","T071","T072","T075","T076","T077","T078","T080","T081","T084","T087"]},"JATISTA":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T016","T017","T018","T019","T023","T024","T025","T026","T027","T028","T040","T051","T063","T087"],"ILS":[]},"LIDER DE EXPEDIÇÃO E RECEBIMENTO":{"CHX":["T001","T002","T003","T004","T005","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T043","T044","T045","T087"],"ILS":[]},"LIDER DE INSPEÇÃO DA QUALIDADE":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T033","T036","T044","T053","T056","T058","T066","T067","T068","T071","T072","T075","T076","T077","T078","T080","T081","T084","T087"]},"LIDER DE TRATAMENTO E SUPERFÍCIE":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T015","T019","T020","T021","T022","T023","T024","T025","T026","T027","T028","T051","T055","T087"],"ILS":[]},"MECANICO DE MANUTENÇÃ INDUSTRIAL":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T087","T088","T092"]},"METALIZADOR":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T020","T021","T022","T023","T024","T025","T026","T027","T028","T051","T054","T087"],"ILS":[]},"METALIZADOR (C)":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T020","T021","T022","T023","T024","T025","T026","T027","T028","T051","T054","T087"],"ILS":[]},"MOTORISTA COMPRADOR":{"CHX":["T001","T002","T003","T004","T005","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T087"],"ILS":[]},"OPERADOR DE ACABAMENTO":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T051","T087"],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T087"]},"OPERADOR DE BRUNIMENTO (C, D)":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T051","T078","T087"],"ILS":[]},"OPERADOR DE BRUNIDORA B":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T051","T078","T087"]},"OPERADOR DE SUPERFÍCIE D":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T087"]},"OPERADOR DE TRATAMENTO DE SUPERFÍCIE (I, II)":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T015","T019","T020","T021","T022","T023","T024","T025","T026","T027","T028","T051","T087"],"ILS":[]},"OPERADOR DE USINAGEM":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T051","T076","T087"],"ILS":[]},"PINTOR INDUSTRIAL":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T051","T065","T087"]},"QUÍMICO":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T015","T016","T017","T019","T020","T021","T022","T023","T024","T025","T026","T027","T028","T051","T069","T070","T084","T085","T087"],"ILS":[]},"RETIFICADOR":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T051","T075","T087"],"ILS":[]},"RETIFICADOR A":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T051","T075","T087"],"ILS":[]},"SERRALHEIRO B":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T017","T018","T019","T023","T024","T025","T026","T027","T028","T087"],"ILS":[]},"SOLDADOR":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T016","T017","T018","T019","T023","T024","T025","T026","T027","T028","T051","T059","T060","T061","T087"],"ILS":[]},"SUPERVISOR DE PLANEJAMENTO E PRODUÇÃO":{"CHX":["T001","T002","T003","T004","T005","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T043","T044","T045","T047","T087"],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T033","T044","T087","T093","T094"]},"SUPERVISOR DE PRODUÇÃO DE HIDRÁULICA":{"CHX":["T001","T002","T003","T004","T005","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T043","T044","T045","T047","T087"],"ILS":[]},"TÉCNICO DE SEGURANÇA DO TRABALHO SENIOR":{"CHX":[],"ILS":["T025","T008","T014","T023","T024","T089","T090","T026","T028","T084","T085","T086","T087"]},"TORNEIRO MECÂNICO":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T051","T076","T087"],"ILS":[]},"TORNEIRO MECÂNICO I":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T051","T076","T087"],"ILS":[]},"TORNEIRO MECÂNICO III":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T051","T076","T087"],"ILS":[]},"TORNEIRO RETIFICADOR":{"CHX":["T001","T002","T003","T004","T006","T007","T008","T009","T010","T012","T013","T014","T019","T023","T024","T025","T026","T027","T028","T051","T075","T076","T087"],"ILS":[]}};
+const DB_P=[{"id":"PC001","curso":"Integração (DP/RH)","entidade":"Chromax (RH)","publico":"Todos os novos","previsao":"Jan a Dez/26","realizado":"Em curso","empresa":"CHX"},{"id":"PC009","curso":"Brigada de Incêndio","entidade":"Chromax (Biosms)","publico":"Todos","previsao":"Junho","realizado":"11/06/2026","empresa":"CHX"},{"id":"PC010","curso":"Proteção respiratória com teste de selagem","entidade":"Chromax (Semetre)","publico":"Todos","previsao":"Fevereiro","realizado":"10/02/2026","empresa":"CHX"},{"id":"PC011","curso":"Mapa de Risco","entidade":"TST/CIPA","publico":"Todos","previsao":"Janeiro","realizado":"06/01/2026","empresa":"CHX"},{"id":"PC012","curso":"Combate a princípios de incêndio (NR23)","entidade":"Chromax (CIPA)","publico":"Todos","previsao":"Junho","realizado":"11/06/2026","empresa":"CHX"},{"id":"PC013","curso":"Apresentação do PGR/PCMSO","entidade":"Chromax (TST)","publico":"Todos","previsao":"Abril","realizado":"26/05/2026","empresa":"CHX"},{"id":"PC015","curso":"Análise de riscos dos processos","entidade":"CHX (SGQ)","publico":"Todos","previsao":"Abril","realizado":"09/05/2026","empresa":"CHX"},{"id":"PC017","curso":"Auditoria Interna e Externa","entidade":"CHX (SGQ)","publico":"Todos","previsao":"Agosto","realizado":"01/09/2026","empresa":"CHX"},{"id":"PC018","curso":"Proteção Auditiva","entidade":"Chromax (TST)","publico":"Todos","previsao":"Maio","realizado":"18/05/2026","empresa":"CHX"},{"id":"PC019","curso":"Proteção Respiratória","entidade":"Chromax (TST)","publico":"Todos","previsao":"Junho","realizado":"02/06/2026","empresa":"CHX"},{"id":"PC020","curso":"Uso correto e conservação do EPI (NR6)","entidade":"Chromax (TST)","publico":"Todos","previsao":"Outubro","realizado":"","empresa":"CHX"},{"id":"PC025","curso":"Operação de Equipamentos – NR11","entidade":"Chromax (TST)","publico":"Conforme risco","previsao":"Maio","realizado":"12/05/2026","empresa":"CHX"},{"id":"PC027","curso":"Importância do EPI","entidade":"Chromax (Direção)","publico":"Todos","previsao":"Março","realizado":"25/03/2026","empresa":"CHX"},{"id":"PC028","curso":"Acidentes e doenças do trabalho","entidade":"Chromax (TST)","publico":"Todos","previsao":"Julho","realizado":"21/07/2026","empresa":"CHX"},{"id":"PC029","curso":"Divulgar PCA (NR-06)","entidade":"Chromax (TST)","publico":"Todos","previsao":"Julho","realizado":"18/06/2026","empresa":"CHX"},{"id":"PC030","curso":"Risco Ergonômico","entidade":"Chromax (TST)","publico":"Todos","previsao":"Agosto","realizado":"18/08/2026","empresa":"CHX"},{"id":"PC031","curso":"Conscientização - Água e Sustentabilidade","entidade":"Chromax (Químico)","publico":"Todos","previsao":"Março","realizado":"19/03/2026","empresa":"CHX"},{"id":"PC032","curso":"Programa de educação ambiental","entidade":"Chromax (Químico)","publico":"Todos","previsao":"Setembro","realizado":"Em curso","empresa":"CHX"},{"id":"PC033","curso":"Emergência Ambiental","entidade":"Chromax (Quimico)","publico":"Todos","previsao":"Maio","realizado":"19/05/2026","empresa":"CHX"},{"id":"PC034","curso":"Resíduos Perigosos","entidade":"Chromax (Químico)","publico":"Todos","previsao":"Outubro","realizado":"","empresa":"CHX"},{"id":"PC035","curso":"Resíduos Sólidos e Coleta Seletiva","entidade":"Chromax (Químico)","publico":"Todos","previsao":"Novembro","realizado":"","empresa":"CHX"},{"id":"PC036","curso":"Risco Químico","entidade":"Chromax (Químico)","publico":"Setor de cromo","previsao":"Junho","realizado":"18/08/2026","empresa":"CHX"},{"id":"PC037","curso":"Manuseio de Produto Químico","entidade":"Chromax (Químico)","publico":"Setor de cromo","previsao":"Agosto","realizado":"18/08/2026","empresa":"CHX"},{"id":"PC038","curso":"FDS - Ficha de Dados de Segurança","entidade":"Chromax (Químico)","publico":"Setor de cromo","previsao":"Julho","realizado":"28/07/2026","empresa":"CHX"},{"id":"PC040","curso":"Palestra combate à obesidade","entidade":"Chromax (RH)","publico":"Todos","previsao":"Maio","realizado":"16/06/2026","empresa":"CHX"},{"id":"PC041","curso":"Setembro Amarelo","entidade":"Chromax (RH)","publico":"Todos","previsao":"Setembro","realizado":"","empresa":"CHX"},{"id":"PC042","curso":"Primeiros Socorros","entidade":"Chromax (RH)","publico":"Todos","previsao":"Junho","realizado":"09/06/2026","empresa":"CHX"},{"id":"PC043","curso":"Gripe e Covid-19","entidade":"Chromax (RH)","publico":"Todos","previsao":"Abril","realizado":"13/05/2026","empresa":"CHX"},{"id":"PC044","curso":"Doenças da Coluna Vertebral","entidade":"Chromax (RH)","publico":"Todos","previsao":"Maio","realizado":"16/06/2026","empresa":"CHX"},{"id":"PC045","curso":"Álcool/Drogas (Tabagismo)","entidade":"Chromax (RH)","publico":"Todos","previsao":"Setembro","realizado":"28/08/2026","empresa":"CHX"},{"id":"PC046","curso":"Exposição Solar","entidade":"Chromax (RH)","publico":"Todos","previsao":"Agosto","realizado":"10/08/2026","empresa":"CHX"},{"id":"PC047","curso":"Outubro Rosa","entidade":"Chromax (RH)","publico":"Todos","previsao":"Outubro","realizado":"","empresa":"CHX"},{"id":"PC048","curso":"Novembro Azul","entidade":"Chromax (RH)","publico":"Todos","previsao":"Novembro","realizado":"","empresa":"CHX"},{"id":"PI001","curso":"Integração (DP/RH)","entidade":"ILS (RH)","publico":"Todos os novos","previsao":"Jan a Dez/26","realizado":"Em curso","empresa":"ILS"},{"id":"PI009","curso":"Proteção respiratória com teste de selagem","entidade":"ILS (Semetre)","publico":"Todos","previsao":"Fevereiro","realizado":"10/02/2026","empresa":"ILS"},{"id":"PI011","curso":"Combate a princípios de incêndio (NR23)","entidade":"ILS (CIPA)","publico":"Todos","previsao":"Junho","realizado":"Em curso","empresa":"ILS"},{"id":"PI017","curso":"Proteção Auditiva","entidade":"ILS (TST)","publico":"Todos","previsao":"Maio","realizado":"Em curso","empresa":"ILS"},{"id":"PI022","curso":"Segurança em Instalações Elétricas – NR10","entidade":"ILS (TST)","publico":"Eletricistas","previsao":"Jan a Dez/26","realizado":"Em curso","empresa":"ILS"},{"id":"PI023","curso":"Segurança com Inflamáveis – NR20","entidade":"ILS (TST)","publico":"Conforme risco","previsao":"Jan a Dez/26","realizado":"Em curso","empresa":"ILS"},{"id":"PI024","curso":"Operação de Equipamentos – NR11","entidade":"ILS (TST)","publico":"Conforme risco","previsao":"Maio","realizado":"Em curso","empresa":"ILS"},{"id":"PI029","curso":"Direito de recusa ao trabalho (NR-01)","entidade":"ILS (TST)","publico":"Todos","previsao":"Agosto","realizado":"","empresa":"ILS"},{"id":"PI031","curso":"Conscientização - Água e Sustentabilidade","entidade":"ILS (Químico)","publico":"Todos","previsao":"Março","realizado":"","empresa":"ILS"},{"id":"PI032","curso":"Programa de educação ambiental","entidade":"ILS (Químico)","publico":"Todos","previsao":"Setembro","realizado":"19/03/2026","empresa":"ILS"},{"id":"PI033","curso":"Emergência Ambiental","entidade":"ILS (Quimico)","publico":"Todos","previsao":"Maio","realizado":"Em curso","empresa":"ILS"},{"id":"PI034","curso":"Resíduos Perigosos","entidade":"ILS (Químico)","publico":"Todos","previsao":"Outubro","realizado":"","empresa":"ILS"},{"id":"PI036","curso":"Risco Químico","entidade":"ILS (Químico)","publico":"Setor de cromo","previsao":"Junho","realizado":"","empresa":"ILS"},{"id":"PI037","curso":"Manuseio de Produto Químico","entidade":"ILS (Químico)","publico":"Setor de cromo","previsao":"Agosto","realizado":"","empresa":"ILS"},{"id":"PI038","curso":"FISPQ","entidade":"ILS (Químico)","publico":"Setor de cromo","previsao":"Junho","realizado":"","empresa":"ILS"},{"id":"PI041","curso":"Setembro Amarelo","entidade":"ILS (RH)","publico":"Todos","previsao":"Setembro","realizado":"","empresa":"ILS"},{"id":"PI042","curso":"Primeiros Socorros","entidade":"ILS (RH)","publico":"Todos","previsao":"Junho","realizado":"","empresa":"ILS"},{"id":"PI043","curso":"Gripe e Covid-19","entidade":"ILS (RH)","publico":"Todos","previsao":"Abril","realizado":"","empresa":"ILS"},{"id":"PI047","curso":"Outubro Rosa","entidade":"ILS (RH)","publico":"Todos","previsao":"Outubro","realizado":"","empresa":"ILS"},{"id":"PI048","curso":"Novembro Azul","entidade":"ILS (RH)","publico":"Todos","previsao":"Novembro","realizado":"","empresa":"ILS"}];
+const COLABS_BASE=[{"id":"I001","nome":"ALMIR MARTINS DA SILVA JUNIOR","func":"ELETRICISTA DE MANUTENÇÃO II","emp":"ILS","adm":""},{"id":"I002","nome":"ANTONIO VERAS DE MORAIS","func":"ELETRICISTA DE MANUTENÇÃO I","emp":"ILS","adm":""},{"id":"I003","nome":"BRUNA DANTAS DE FARIAS","func":"ANALISTA DE FATURAMENTO","emp":"ILS","adm":""},{"id":"I004","nome":"CARLOS AUGUSTO CARVALHO PIERONI","func":"AUXILIAR DE ALMOXARIFADO","emp":"ILS","adm":""},{"id":"I005","nome":"CLAUDIA APARECIDA VENTURA DE SOUZA","func":"ANALISTA ADMINISTRATIVO DE RECURSOS HUMANOS","emp":"ILS","adm":""},{"id":"I006","nome":"CLAUDIO ADELINI MARTINS GOMES","func":"MECANICO DE MANUTENÇÃ INDUSTRIAL","emp":"ILS","adm":""},{"id":"I007","nome":"EDILENE COUTO GUIMARÃES DA ROCHA","func":"ASSISTENTE DE DEPARTAMENTO PESSOAL","emp":"ILS","adm":""},{"id":"I008","nome":"FELIPE DO ESPIRITO SANTO PIRES","func":"ASSISTENTE DE PCP","emp":"ILS","adm":""},{"id":"I009","nome":"GABRIELLE HENRIQUES CAMELO","func":"ANALISTA DE FATURAMENTO","emp":"ILS","adm":""},{"id":"I010","nome":"HEVERTON DAS NEVES MEDEIROS","func":"ASSISTENTE ADMINISTRATIVO","emp":"ILS","adm":""},{"id":"I011","nome":"IDÁLIA NUNES DA SILVA CARREIRA DOS SANTOS","func":"ANALISTA FINANCEIRO","emp":"ILS","adm":""},{"id":"I012","nome":"INGRID AYRES DA SILVA ARAUJO","func":"ANALISTA DE FATURAMENTO","emp":"ILS","adm":""},{"id":"I013","nome":"JOICE GONÇALVES DE OLIVEIRA","func":"ASSISTENTE ADMINISTRATIVO FINANCEIRO","emp":"ILS","adm":""},{"id":"I014","nome":"JOSÉ ADERBAL ALVES TEIXEIRA","func":"AUXILIAR DE SERVIÇOS GERAIS (I E II)","emp":"ILS","adm":""},{"id":"I015","nome":"JOSIMAR MENDES PEREIRA JUNIOR","func":"OPERADOR DE SUPERFÍCIE D","emp":"ILS","adm":""},{"id":"I016","nome":"KAYKE DA SILVA DE ANDRADE","func":"APRENDIZ DE MECANICO DE USINAGEM","emp":"ILS","adm":""},{"id":"I017","nome":"LEANDRO DA SILVA","func":"OPERADOR DE BRUNIDORA B","emp":"ILS","adm":""},{"id":"I018","nome":"MARCELO SILVA DE SOUZA","func":"PINTOR INDUSTRIAL","emp":"ILS","adm":""},{"id":"I019","nome":"MARIO MASCARENHA CORREIA DE CASTRO","func":"AUXILIAR DE MECÂNICO I","emp":"ILS","adm":""},{"id":"I020","nome":"MILTON GONÇALVES SANTOS","func":"SUPERVISOR DE PLANEJAMENTO E PRODUÇÃO","emp":"ILS","adm":""},{"id":"I021","nome":"MÔNICA SANTOS DA SILVA NEGRÃO","func":"TÉCNICO DE SEGURANÇA DO TRABALHO SENIOR","emp":"ILS","adm":""},{"id":"I022","nome":"RAPHAEL DA CONCEIÇÃO MENEZES","func":"LIDER DE INSPEÇÃO DA QUALIDADE","emp":"ILS","adm":""},{"id":"I023","nome":"TIAGO JOSÉ FRAGOSO DA SILVA","func":"AUXILIAR DE MANUTENÇÃO","emp":"ILS","adm":""},{"id":"I024","nome":"VICTOR NEVES SILVA","func":"INSPETOR DE QUALIDADE","emp":"ILS","adm":""},{"id":"C001","nome":"ADÃO INOCÊNCIO DE LAIA","func":"RETIFICADOR A","emp":"CHX","adm":""},{"id":"C002","nome":"ADEILSON BASILIO LOYOLA","func":"OPERADOR DE TRATAMENTO DE SUPERFÍCIE (I, II)","emp":"CHX","adm":""},{"id":"C003","nome":"ADRIANO DA CONCEIÇÃO SOUSA","func":"JATISTA","emp":"CHX","adm":""},{"id":"C004","nome":"ALBERTO CARLOS VIEIRA","func":"AUXILIAR DE OPERAÇÃO","emp":"CHX","adm":""},{"id":"C005","nome":"ALEXSANDRO OLIVEIRA DA SILVEIRA","func":"RETIFICADOR","emp":"CHX","adm":""},{"id":"C006","nome":"ALINE FERREIRA NUNES","func":"COORDENADORA COMERCIAL","emp":"CHX","adm":""},{"id":"C007","nome":"ANA BEATRYS LISBOA N. DE MAGALHÃES","func":"APRENDIZ ADMINISTRATIVO","emp":"CHX","adm":""},{"id":"C008","nome":"ANA JANAÍNA DA SILVA OLIVEIRA","func":"ASSISTENTE DE DEPARTAMENTO PESSOAL","emp":"CHX","adm":""},{"id":"C009","nome":"ANDERSON SANTOS DE CARVALHO","func":"LIDER DE TRATAMENTO E SUPERFÍCIE","emp":"CHX","adm":""},{"id":"C010","nome":"ANDRÉ MARTINS MOREIRA","func":"TORNEIRO RETIFICADOR","emp":"CHX","adm":""},{"id":"C011","nome":"ARLINDO MARQUES FERREIRA","func":"AUXILIAR DE MECÂNICO","emp":"CHX","adm":""},{"id":"C012","nome":"BRUNO SOARES JORDÃO","func":"COORDENADOR DE SUPRIMENTOS","emp":"CHX","adm":""},{"id":"C013","nome":"CARLOS ROBERTO CHAGAS SILVA","func":"SERRALHEIRO B","emp":"CHX","adm":""},{"id":"C014","nome":"DAVID MEDEIROS LAIA","func":"CROMADOR (I, II, III)","emp":"CHX","adm":""},{"id":"C015","nome":"DIOGO AFONSO LOPES CARNEIRO","func":"OPERADOR DE BRUNIMENTO (C, D)","emp":"CHX","adm":""},{"id":"C016","nome":"EDSON DANIEL DOS SANTOS SILVA","func":"AUXILIAR DE CROMADOR","emp":"CHX","adm":""},{"id":"C017","nome":"ESPERIDIÃO EDISON MOREIRA","func":"TORNEIRO MECÂNICO I","emp":"CHX","adm":""},{"id":"C018","nome":"FELIPE COSTA PINTO","func":"OPERADOR DE ACABAMENTO","emp":"CHX","adm":""},{"id":"C019","nome":"JOEL DOS SANTOS SILVA","func":"LIDER DE EXPEDIÇÃO E RECEBIMENTO","emp":"CHX","adm":""},{"id":"C020","nome":"JOELMIR BEZERRA BOMFIM","func":"SOLDADOR","emp":"CHX","adm":""},{"id":"C021","nome":"JONATHAN PEIXOTO FERNANDES","func":"METALIZADOR (C)","emp":"CHX","adm":""},{"id":"C022","nome":"JOSE AGUINALDO MOREIRA","func":"SOLDADOR","emp":"CHX","adm":""},{"id":"C023","nome":"JOSÉ FRANCISCO DA SILVA","func":"AUXILIAR DE SERVIÇOS GERAIS (I E II)","emp":"CHX","adm":""},{"id":"C024","nome":"JOSE RICARDO SANTOS","func":"OPERADOR DE USINAGEM","emp":"CHX","adm":""},{"id":"C025","nome":"LUCAS HENRIQUE BRAGA CAMARA","func":"APRENDIZ DE AUXILIAR DE PRODUÇÃO","emp":"CHX","adm":""},{"id":"C026","nome":"LUCAS MATEUS ALMEIDA","func":"AUXILIAR DE PRODUÇÃO","emp":"CHX","adm":""},{"id":"C027","nome":"LUCAS SILVA DA SILVEIRA","func":"AUXILIAR DE METALIZADOR","emp":"CHX","adm":""},{"id":"C028","nome":"LUIZ HENRIQUE SILVA DE LIMA","func":"ANODEIRO","emp":"CHX","adm":""},{"id":"C029","nome":"MANOEL ANTONIO AMANCIO","func":"METALIZADOR","emp":"CHX","adm":""},{"id":"C030","nome":"MANOEL DOS SANTOS FILHO","func":"TORNEIRO MECÂNICO III","emp":"CHX","adm":""},{"id":"C031","nome":"MARCIO LUIZ OLIVEIRA DA SILVA","func":"QUÍMICO","emp":"CHX","adm":""},{"id":"C032","nome":"MARCOS PAULO DA SILVA DUARTE","func":"SUPERVISOR DE PRODUÇÃO DE HIDRÁULICA","emp":"CHX","adm":""},{"id":"C033","nome":"MARCOS PAULO SANTOS PORTO","func":"AUXILIAR DE CROMADOR","emp":"CHX","adm":""},{"id":"C034","nome":"MARILENE CORRÊA","func":"ANALISTA DE CONTROLE DE QUALIDADE JUNIOR","emp":"CHX","adm":""},{"id":"C035","nome":"MARLON OLIVEIRA DE MATOS","func":"AUXILIAR DE CROMADOR","emp":"CHX","adm":""},{"id":"C036","nome":"MAYCON DE OLIVEIRA DE MATOS","func":"AUXILIAR DE OPERADOR DE BRUNIDORA","emp":"CHX","adm":""},{"id":"C037","nome":"NELSON COSTA SANTOS","func":"AUXILIAR DE EXPEDIÇÃO I","emp":"CHX","adm":""},{"id":"C038","nome":"PAULO CESAR DE SOUZA","func":"RETIFICADOR A","emp":"CHX","adm":""},{"id":"C039","nome":"PAULO CESAR OLIVEIRA DOS SANTOS","func":"MOTORISTA COMPRADOR","emp":"CHX","adm":""},{"id":"C040","nome":"RENIR SANTOS DE OLIVEIRA","func":"CROMADOR (I, II, III)","emp":"CHX","adm":""},{"id":"C041","nome":"ROBERTO MAURO DOS REIS","func":"AUXILIAR OPERADOR ETDI","emp":"CHX","adm":""},{"id":"C042","nome":"RODRIGO DE OLIVEIRA NOVAIS","func":"AUXILIAR DE OPERADOR DE BRUNIDORA","emp":"CHX","adm":""},{"id":"C043","nome":"UANDERSON SCHEIDDEGER ROSA","func":"ANALISTA DE CONTROLE DE QUALIDADE JUNIOR","emp":"CHX","adm":""},{"id":"C044","nome":"WILDERSON MARTINS MOREIRA","func":"TORNEIRO MECÂNICO","emp":"CHX","adm":""},{"id":"C045","nome":"WUENDEL ARAUJO CUNHA","func":"AUXILIAR DE PRODUÇÃO","emp":"CHX","adm":""}];
+
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+let DB={colabs:[...COLABS_BASE],partic:[],mudancas:[],eventos:[],treinsInativos:[],funcsInativas:[],treinsExtra:[],funcsExtra:[],matrizExtra:{},categoriasExtra:[]};
+
+var DB_T_ALL=[...DB_T];
+var DB_F_ALL=[...DB_F];
+var DB_M_ALL=JSON.parse(JSON.stringify(DB_M));
+let dbRef=null,relAtivo='cob',mesSel='';
+
+function oF(f,e){return(DB_M_ALL[f]&&DB_M_ALL[f][e])||[];}
+function tById(id){return DB_T.find(t=>t.id===id);}
+function stP(p){if(p.realizado&&p.realizado!==''&&p.realizado!=='Em curso')return'realizado';if(p.realizado==='Em curso')return'em_curso';return'pendente';}
+function showMsg(id,txt,t){var el=document.getElementById(id);if(el){el.innerHTML='<div class="'+t+'-msg" style="margin-bottom:8px">'+txt+'</div>';setTimeout(function(){el.innerHTML='';},5000);}}
+function cM(id){document.getElementById(id).style.display='none';}
+function sChip(v,el,gid){document.querySelectorAll('#'+gid+' .chip').forEach(function(c){c.classList.remove('on');});el.classList.add('on');el._v=v;}
+function gChip(gid){var el=document.querySelector('#'+gid+' .chip.on');return el?el._v:'todos';}
+function tsF(ts){if(!ts)return'—';var d=new Date(ts);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+
+async function saveDB(){
+  try{
+    localStorage.setItem('tc3_c',JSON.stringify(DB.colabs));
+    localStorage.setItem('tc3_p',JSON.stringify(DB.partic));
+    localStorage.setItem('tc3_mu',JSON.stringify(DB.mudancas||[]));
+    localStorage.setItem('tc3_ev',JSON.stringify(DB.eventos||[]));
+    localStorage.setItem('tc3_ti',JSON.stringify(DB.treinsInativos||[]));
+    localStorage.setItem('tc3_fi',JSON.stringify(DB.funcsInativas||[]));
+    localStorage.setItem('tc3_te',JSON.stringify(DB.treinsExtra||[]));
+    localStorage.setItem('tc3_fe',JSON.stringify(DB.funcsExtra||[]));
+    localStorage.setItem('tc3_me',JSON.stringify(DB.matrizExtra||{}));
+    localStorage.setItem('tc3_cat',JSON.stringify(DB.categoriasExtra||[]));
+    document.getElementById('sync-lbl').innerHTML='<span class="sync-badge">Salvo '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</span>';
+  }catch(e){console.error('Erro ao salvar:',e);}
+}
+
+
